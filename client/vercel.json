@@ -1,6 +1,12 @@
 {
   "rewrites": [
-    { "source": "/bookbuddy/(.*)", "destination": "https://bookbuddy-fefj.onrender.com/bookbuddy/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/bookbuddy/:path*",
+      "destination": "https://bookbuddy-fefj.onrender.com/bookbuddy/:path*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/index.html"
+    }
   ]
 }
