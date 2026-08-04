@@ -357,7 +357,7 @@ const getMinDateTime = () => {
                <div className='border-2 border-dashed border-gray-700 hover:border-blue-500 transition-colors bg-gray-950 rounded-2xl p-4 sm:p-6 text-center cursor-pointer'>
                  <input 
                    type="file" 
-                   accept=".jpg, .jpeg, .png, .svg, image/jpeg, image/png, image/svg+xml"  
+                   accept="image/*"
                    className='text-sm'
                    id="banner-upload"
                    {...register("bannerImage", { required: "Banner image is required" })}
