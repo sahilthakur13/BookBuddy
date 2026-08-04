@@ -2,11 +2,13 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { allEvents, searchEvents } from '../api/axios'
 import EventCard from '../components/EventCard'
+import {EventCardSkeleton} from '../components/skeletons/EventCardSkeleton'
 import { Search, X } from 'lucide-react'
 
 const Home = () => {
   const [page, setPage] = useState(1);
   const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState();
 
   // ── Search dropdown
@@ -19,15 +21,23 @@ const Home = () => {
   const abortControllerRef = useRef(null);
 
   useEffect(() => {
-    const getEventData = async () => {
+  const getEventData = async () => {
+    setLoading(true);
+    try {
       const response = await allEvents(page);
-      setEvents(response.data.allEvents);
-
+      setEvents(response.data.allEvents || []);
       setPage(response.data.currentPage);
       setTotalPages(response.data.totalPages);
+    } catch (error) {
+      console.error("Failed to fetch events:", error);
+      setEvents([]);
+    } finally {
+      setLoading(false);
     }
-    getEventData();
-  }, [page])
+  };
+
+  getEventData();
+}, [page]);
 
   // ── Debounced search
   useEffect(() => {
@@ -144,21 +154,30 @@ const Home = () => {
         )}
       </div>
 
-      {(!events || events.length === 0) ? (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] sm:min-h-100 p-6 text-center bg-black rounded-xl border border-gray-800">
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-200 mb-2">
-            No Events Found
-          </h3>
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 px-0 sm:px-4">
-            {events.map((event) => (
-              <EventCard key={event._id} event={event} />
-            ))}
-          </div>
-
-          {/* Pagination */}
+      {loading ? (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 px-0 sm:px-4">
+        {Array.from({length:8}).map((_,index)=>(
+          <EventCardSkeleton key={index}/>
+        ))}
+      </div>
+    ) : events.length === 0 ? (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] sm:min-h-100 p-6 text-center bg-black rounded-xl border border-gray-800">
+        <h3 className="text-lg sm:text-xl font-semibold text-gray-200 mb-2">
+          No Events Found
+        </h3>
+        <p className="text-gray-500 text-sm">
+          Try adjusting your filters or check back later.
+        </p>
+      </div>
+    ) : (
+      <>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 px-0 sm:px-4">
+        {events.map((event) => (
+          <EventCard key={event._id} event={event} />
+        ))}
+      </div>
+    
+         {/* Pagination */}
           <div className="flex justify-center mt-8 sm:mt-10">
             <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 bg-gray-900 border border-gray-800 rounded px-3 py-2 shadow-xl">
 

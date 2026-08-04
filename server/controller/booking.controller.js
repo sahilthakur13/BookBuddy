@@ -22,45 +22,92 @@ exports.getUserBookingController = async (req, res) => {
 }
 
 exports.createBookingController = async (req, res) => {
+    try {
+        const { eventId, seatsNumbers } = req.body;
+        const userId = req.user._id;
 
-    const { eventId, seatsNumbers } = req.body;
-    const userId = req.user._id;
+        if (!eventId || !Array.isArray(seatsNumbers) || seatsNumbers.length === 0) {
+            return res.status(400).json({
+                message: "Booking failed, something is missing",
+                success: false
+            });
+        }
 
-    if (!eventId || !seatsNumbers) {
-        return res.status(400).json({
-            message: "Booking failed , Something is missing",
+        // Dedupe — prevents overcharging if the same seat is sent twice
+        const uniqueSeats = [...new Set(seatsNumbers)];
+
+        const eventData = await eventModel.findOne({ _id: eventId })
+            .select('_id seats price eventDate status');
+
+        if (!eventData) {
+            return res.status(404).json({
+                message: "Event not found",
+                success: false
+            });
+        }
+
+        if (eventData.status === "cancelled") {
+            return res.status(400).json({
+                message: "This event has been cancelled",
+                success: false
+            });
+        }
+
+        if (new Date(eventData.eventDate) < new Date()) {
+            return res.status(400).json({
+                message: "Booking closed — event has already taken place",
+                success: false
+            });
+        }
+
+        // Every requested seat must actually exist on this event
+        const validSeatNumbers = new Set(eventData.seats.map((s) => s.seatNumber));
+        const invalidSeats = uniqueSeats.filter((s) => !validSeatNumbers.has(s));
+
+        if (invalidSeats.length > 0) {
+            return res.status(400).json({
+                message: `Invalid seat number(s): ${invalidSeats.join(", ")}`,
+                success: false
+            });
+        }
+
+        const alreadyBookedSeats = eventData.seats.filter(
+            (seat) => uniqueSeats.includes(seat.seatNumber) && seat.isBooked === true
+        );
+
+        if (alreadyBookedSeats.length > 0) {
+            const bookedNumbers = alreadyBookedSeats.map((seat) => seat.seatNumber);
+            return res.status(400).json({
+                message: `Seat number ${bookedNumbers.join(", ")} ${bookedNumbers.length > 1 ? "are" : "is"} already booked`,
+                success: false
+            });
+        }
+
+        const price = eventData.price * uniqueSeats.length;
+
+        // razorpay payment order code
+        const options = {
+            amount: Math.round(price * 100),
+            currency: "INR",
+            receipt: `receipt_${Date.now()}`
+        };
+
+        const order = await razorpayInstance.orders.create(options);
+
+        return res.status(200).json({
+            order,
+            success: true,
+            amount: price
+        });
+
+    } catch (error) {
+        console.error("createBookingController error:", error);
+        return res.status(500).json({
+            message: "Something went wrong while creating the booking",
             success: false
-        })
+        });
     }
-
-    const eventData = await eventModel.findOne({ _id: eventId }).select('_id seats price')
-
-    const price = eventData.price * seatsNumbers.length;
-
-    const alreadybookedSeats = eventData.seats.filter((seat) => seatsNumbers.includes(seat.seatNumber) && seat.isBooked == true);
-
-    if (alreadybookedSeats.length > 0) {
-        const bookedNumber = alreadybookedSeats.map((seat) => seat.seatNumber)
-        return res.status(400).json({
-            message: `Seat number ${bookedNumber.join()} ${bookedNumber.length >= 1 ? "are" : "is"} already booked`
-        })
-    }
-
-    // razorpay payment order  Code  
-    const options = {
-        amount: price * 100,
-        currency: "INR",
-        receipt: `receipt_${Date.now()}`
-    }
-
-    const order = await razorpayInstance.orders.create(options);
-    return res.status(200).json({
-        order,
-        success: "true",
-        amount: price
-    })
-
-}
+};
 
 
 exports.verifyBookingPaymentController = async (req, res) => {

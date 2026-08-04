@@ -1,8 +1,5 @@
 const mongoose = require("mongoose");
 const config = require("./config");
-const dns = require('dns');
-
-dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 async function dbConnect() {
     mongoose.set('autoIndex', process.env.NODE_ENV !== 'production');

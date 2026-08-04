@@ -19,7 +19,6 @@ export const Login = () => {
   async function signupHandler(data) {
     try {
       const response = await login(data);
-      console.log("response", response);
 
       if (response.status == 200) {
         toast.success("You are login successfully 😊");

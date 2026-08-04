@@ -10,4 +10,4 @@ export const redirectAfterAuth = (navigate) => {
     sessionStorage.removeItem(REDIRECT_KEY);
 
     navigate(url, { replace: true });
-};
+};  

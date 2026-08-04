@@ -2,6 +2,7 @@ require('dotenv').config();
 const app = require('./index');
 const dbConnect =require('./config/database');
 const { verifyConnection } = require('./config/redis');
+const PORT = process.env.PORT || 3000
 
 async function startServer(){
     
@@ -10,8 +11,8 @@ async function startServer(){
 
      verifyConnection();
 
-app.listen(3000,()=>{
-    console.log("Server is running on port 3000");
+app.listen(PORT,()=>{
+    console.log(`Server is running on port ${PORT}`);
 }
 )
    }catch(eroor){
