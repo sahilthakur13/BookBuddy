@@ -1,6 +1,5 @@
 const express = require("express");
 const cors =  require('cors');
-const Redis = require('ioredis') 
 const cookieParser  = require('cookie-parser');
 const authRouter = require("./routes/auth.routes");
 const { authMiddleware } = require("./middleware/auth.middleware");

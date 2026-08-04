@@ -21,7 +21,6 @@ const Signup = () => {
     try {
       setLoading(true)
       const response = await signup(data);
-
       if (response.status == 201 && response.data.requiresVerification == true) {
         toast.success(response.data.message);
         navigate("/otp-verify", { state: { email: response.data.email } })
@@ -32,6 +31,7 @@ const Signup = () => {
       console.log("STATUS:", error.response?.status);
       console.log("DATA:", error.response?.data.message);
       console.log("URL:", error.config?.url);
+      setLoading(false)
     } finally {
       setLoading(false)
     }

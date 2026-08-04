@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const config = require("./config");
 
+
 async function dbConnect() {
     mongoose.set('autoIndex', process.env.NODE_ENV !== 'production');
 
