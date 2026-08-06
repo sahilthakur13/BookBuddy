@@ -7,7 +7,7 @@ const bookingModel = require("../model/bookingModel");
 exports.createEventController = async (req, res) => {
 
   const { title, description, contactEmail, contactPhone, eventDate, location, totalSeats, price, artist, genre, duration } = req.body;
-
+  console.log("eventDate..",eventDate);
   try {
     if (!title || !description || !contactEmail || !contactPhone || !eventDate || !location || !totalSeats || !price || !artist ||
       !genre || !duration

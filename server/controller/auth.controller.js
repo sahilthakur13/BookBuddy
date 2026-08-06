@@ -1,6 +1,6 @@
 const bcrypt =require('bcryptjs')
 const userModel=require('../model/userModel');
-const redis = require('../config/redis');
+const {redis} = require('../config/redis');
 const {saveOtp,verifyOtp} = require("../services/otp.service")
 const {sentOtpEmail} =  require('../services/email.service')
 const { jwtSign } = require('../utils/jwt.utils');
@@ -55,6 +55,7 @@ exports.registerController = async(req,res)=>{
     });
 
     }
+
     return res.status(201).json({
     success: true,
     message: "User created",
@@ -98,7 +99,7 @@ if (otpStatus === 'INVALID') {
   
    const updatedUser = await userModel.findOneAndUpdate({email},{isVerified:true},{returnDocument:'after'});
     
-     const token = jwtSign(updatedUser._id,updatedUser.role);
+    const token = jwtSign(updatedUser._id,updatedUser.role);
 
     res.cookie("token",token,{
         httpOnly:true, 
@@ -124,47 +125,63 @@ if (otpStatus === 'INVALID') {
 }
 
 
-exports.loginController = async(req,res)=>{
-    const {email,password} =req.body;
+exports.loginController = async (req, res) => {
+    const { email, password } = req.body;
 
-    if(!email || !password){
-        return res.status(404).json({
-            message:"Please enter email and password"
-        })
-    }
+    try {
+        if (!email || !password) {
+            return res.status(404).json({
+                message: "Please enter email and password"
+            });
+        }
 
-    const user = await userModel.findOne({email}).select("+password");
-    if(!user){
-        return res.status(404).json({
-            message:"Account is not found. Please register"
-        })
-    }
+        const user = await userModel.findOne({ email }).select("+password");
 
-    const decodedPass = await user.comparePassword(password);
-    
-    if(!decodedPass){
+        if (!user) {
+            return res.status(404).json({
+                message: "Account is not found. Please register"
+            });
+        }
+
+        if (!user.isVerified) {
+            return res.status(403).json({
+                message: "You are not verified.Please register again with same email and verify with otp "
+            });
+        }
+
+        const decodedPass = await user.comparePassword(password);
+
+        if (!decodedPass) {
+            return res.status(400).json({
+                message: "Your password is invalid or wrong"
+            });
+        }
+
+        const token = jwtSign(user._id, user.role);
+
+        res.cookie("token", token, {
+            httpOnly: true,
+            sameSite: "lax",
+            secure: true,
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+
+        const { password: _, ...userWithoutPassword } = user._doc;
+
+        return res.status(200).json({
+            message: "You are logged in",
+            token,
+            user: userWithoutPassword
+        });
+
+    } catch (error) {
+        console.error("FULL ERROR:", error.message);
         return res.status(400).json({
-            message:"Your password is invalid or wrong"
-        })
+            message: "Error",
+            error: error.message
+        });
     }
-
-    const token = jwtSign(user._id,user.role);
-
-    res.cookie("token",token,{
-    httpOnly: true,
-    sameSite: "lax",
-    secure: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    const { password: _, ...userWithoutPassword } = user._doc;
-
-    return res.status(200).json({
-        message:"Your are loggedin",
-        token,
-        user:userWithoutPassword
-    })
-}   
+}; 
 
 
 exports.logoutController = (req, res) => {

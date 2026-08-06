@@ -133,9 +133,6 @@ const sentOtpEmail = async (toEmail, otp, action) => {
 
     const info = await transporter.sendMail(mailOptions);
 
-    console.log("Email Sent Successfully");
-    console.log("Message ID:", info.messageId);
-
     return info;
   } catch (error) {
     console.error("SEND MAIL ERROR:", error);

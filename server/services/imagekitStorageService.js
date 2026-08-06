@@ -10,7 +10,6 @@ async function fileUploads(file){
         file,
         fileName:"bookBuddyBannerImage" + Date.now(),
     })
-    console.log("in service folder imageKit...",result);
     return result
 }
 

@@ -104,6 +104,8 @@ const getMinDateTime = () => {
         setLoading(true);
 
         const duration = (parseInt(data.durationHours) || 0) * 60 + (parseInt(data.durationMinutes) || 0);
+        const localDate = new Date(data.eventDate)
+        data.eventDate = localDate.toISOString();
 
         if (isEditMode) {
          

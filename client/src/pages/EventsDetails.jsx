@@ -207,7 +207,7 @@ const EventsDetails = () => {
     <>
       {/* Seat Selection */}
       <div className="space-y-6">
-        <div className="flex items-end justify-between">
+       <div className="flex flex-col items-start justify-between lg:flex-row lg:items-end">
           <div>
             <p className="text-sm font-medium text-emerald-600 uppercase tracking-widest">AVAILABILITY</p>
             <p className="text-3xl font-semibold text-zinc-900 mt-1">
