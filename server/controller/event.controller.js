@@ -11,7 +11,7 @@ exports.getAllEventsController = async(req,res)=>{
         const totalEventss = await eventModel.countDocuments({
             status:{
                 $ne:"cancelled"
-            }
+            }   
         });
         const allEvents = await eventModel.find({
             status:{

@@ -17,7 +17,7 @@ const EventCard = ({ event }) => {
         <img
           src={event.bannerImage}
           alt={event.title}
-          className="w-full h-full object-contain brightness-75
+          className="w-full h-full object-cover brightness-75
                      transition-transform duration-500 group-hover:scale-110"
         />
       </div>
