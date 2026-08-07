@@ -14,7 +14,7 @@ exports.registerController = async(req,res)=>{
  try {
 
     if(!name || !email || !password){
-        return res.status(404).json({
+        return res.status(400).json({
             message:"name email and password is required"
         })
     }
@@ -25,11 +25,14 @@ exports.registerController = async(req,res)=>{
       return res.status(400).json({ message: "User already exists" });
     }
 
-    if (isExist && !isExist.isVerified) {
-      await userModel.deleteOne({ email });
-      
-      await redis.del(`otp:${action}:${email}`);
-    }
+     if (isExist && !isExist.isVerified) {
+            await userModel.deleteOne({ email });
+            try {
+                await redis.del(`otp:${action}:${email}`);
+            } catch (redisErr) {
+                console.error("Cleanup Redis error ignored:", redisErr.message);
+            }
+        }
 
     const user = await userModel.create({
         name,
@@ -43,9 +46,24 @@ exports.registerController = async(req,res)=>{
 
      const otp = Math.floor(100000 + Math.random() * 900000).toString();
      
-    await saveOtp(email,otp,action);
+    const redisResult = await saveOtp(email, otp, action);
+            if (!redisResult.success) {
+                return res.status(500).json({
+                    success: false,
+                    message: "Failed to securely initiate registration timeout. Please try again."
+                });
+            }
     
-    await sentOtpEmail(email,otp,"account_verification")
+    const emailResult = await sentOtpEmail(email, otp, "account_verification");
+           if (!emailResult.success) {
+                return res.status(500).json({
+                    success: false,
+                    message: "User created, but failed to send verification email. Please request a resend.",
+                    requiresVerification: true,
+                    email: user.email,
+                    error: emailResult.error, 
+                });
+            }
 
     return res.status(201).json({
         success: true,

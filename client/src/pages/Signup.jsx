@@ -28,6 +28,7 @@ const Signup = () => {
 
     } catch (error) {
       toast.error(error.response?.data.message || "Something went wrong");
+      console.log("response.error",error.response)
       console.log("STATUS:", error.response?.status);
       console.log("DATA:", error.response?.data.message);
       console.log("URL:", error.config?.url);
